@@ -2,7 +2,7 @@ import requests
 import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
-pair = 'ETHBTC'
+pair = 'DSHBTC'
 timeframe = '5m'
 
 final_data = []
@@ -23,5 +23,5 @@ for _ in range(0,100):
 
 print(final_data)
 
-with open ('BFX ' + pair + '_' + timeframe + '.json', 'w') as f:
+with open ('BFX_' + pair + '_' + timeframe + '.json', 'w') as f:
     f.write(str(final_data))
