@@ -1,6 +1,6 @@
 fs = require('fs');
 const SMA = require('technicalindicators').SMA;
-const pairsArray = ['ETHBTC'];
+const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
 
 var pairs = {};
 
