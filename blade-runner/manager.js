@@ -13,6 +13,7 @@ function Manager(){
       ma: new SMA({period : maPeriods, values :[]}),
       maValue: 0
     }
+    console.log(pairs[pair]);
   }
 }
 
@@ -27,11 +28,10 @@ Manager.prototype.runBot = function(){
       calculateMA(pair, candle[2])
     }
   }
-
 }
 function calculateMA(pair, close){
   pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(close);
-  console.log(pair, pairs[pair]['maValue']);
+  //console.log(pair, pairs[pair]['maValue']);
 }
 
 module.exports = Manager;
