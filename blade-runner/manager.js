@@ -1,5 +1,6 @@
 fs = require('fs');
 const SMA = require('technicalindicators').SMA;
+const ADX = require('technicalindicators').ADX;
 const pairsArray = ['ETHBTC'];
 const BFXTrade = require('./BfxTrade');
 
@@ -8,6 +9,8 @@ var bfx = new BFXTrade();
 var pairs = {};
 
 const maPeriods = 20;
+const adxPeriods = 14;
+const trendStrength = 25;
 
 var openedPositions = 0;
 var success = 0;
@@ -21,6 +24,8 @@ function Manager(){
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
+      adx: new ADX({period: adxPeriods, close: [], high: [], low: []}),
+      adxValue: 0,
       long: false,
       short: false,
       stopLossPrice: 0,
@@ -34,12 +39,12 @@ function Manager(){
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync(__dirname+'/datasets/BFX_'+pair+'_1m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync(__dirname+'/datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
 
 for(i=0; i<marketData[pairsArray[0]].length; i++){
   for(pair in marketData){
-    calculateMA(pair, marketData[pair][i][2])
+    updateIndicators(pair, marketData[pair][i])
   }
 }
 
@@ -49,22 +54,28 @@ for(i=0; i<marketData[pairsArray[0]].length; i++){
 //    }
 //  }
 }
-function calculateMA(pair, close){
-  pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(close);
-
-  findTradeOpportunity(pair, close);
+function updateIndicators(pair, price){
+  pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
+  pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2], high: price[3], low: price[4]});
+  if (pairs[pair]['adxValue'] != undefined){
+    findTradeOpportunity(pair, price[2]);
+  }
+  else{
+    console.log('ADX CANT TRADE');
+  }
   pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
-  pairs[pair]['prevClose'] = close;
-
+  pairs[pair]['prevClose'] = price[2];
 }
 
 function findTradeOpportunity(pair, close){
   if(!pairs[pair]['long'] && !pairs[pair]['short']){
     if(pairs[pair]['prevClose'] < pairs[pair]['prevMaValue'] &&
-      close > pairs[pair]['maValue']){
+      close > pairs[pair]['maValue'] &&
+      pairs[pair]['adxValue'].adx > trendStrength){
       openLongPosition(pair, close);
     }else if(pairs[pair]['prevClose'] > pairs[pair]['prevMaValue'] &&
-      close < pairs[pair]['maValue']){
+      close < pairs[pair]['maValue'] &&
+      pairs[pair]['adxValue'].adx > trendStrength){
       openShortPosition(pair, close);
     }
   }else if(pairs[pair]['long']){
